@@ -1,0 +1,10 @@
+[project]
+name = "dexhand-learning"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "gymnasium-robotics>=1.4.2",
+    "mujoco==3.3.7",
+]
