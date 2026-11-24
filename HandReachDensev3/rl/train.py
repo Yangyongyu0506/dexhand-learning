@@ -1,3 +1,6 @@
+from datetime import datetime
+from pathlib import Path
+
 import gymnasium as gym
 import gymnasium_robotics
 from stable_baselines3 import SAC
@@ -5,8 +8,19 @@ from stable_baselines3.common.monitor import Monitor
 
 gym.register_envs(gymnasium_robotics)
 
+log_dir = (
+    Path(__file__).resolve().parents[1] / "outputs" / "train"
+    / datetime.now().strftime("%Y%m%d_%H%M%S_%f")
+)
+log_dir.mkdir(parents=True, exist_ok=False)
+print(f"训练日志目录：{log_dir}")
+
 # 训练时关闭实时渲染
-env = Monitor(gym.make("HandReachDense-v3"))
+env = Monitor(
+    gym.make("HandReachDense-v3"),
+    filename=str(log_dir / "monitor.csv"),
+    info_keywords=("is_success",),
+)
 
 try:
     model = SAC(
@@ -29,7 +43,7 @@ try:
     print(model.actor)
     print(model.critic)
 
-    model.learn(total_timesteps=100_000)
-    model.save("hand_reach_sac")
+    model.learn(total_timesteps=100_000_000)
+    model.save("HandReachDensev3/rl/outputs/train/" + log_dir.name + "/hand_reach_sac")
 finally:
     env.close()
