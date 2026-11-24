@@ -23,7 +23,7 @@ try:
         batch_size=256,
         seed=42,
         verbose=1,
-        device="0"
+        device=0
     )
 
     print(model.actor)
