@@ -198,3 +198,29 @@ PY
 - `gymnasium_robotics/envs/assets/hand/robot.xml`、`shared.xml`：关节限位、腱耦合及执行器定义。
 
 [官方 HandReach 文档](https://robotics.farama.org/envs/shadow_dexterous_hand/reach/)可用于对照任务和关节定义，但部分示例仍使用 v2；本目录使用 v3。修改模型、环境版本或控制方式后，应重新读取模型参数。
+
+## 6. 评估训练好的 SAC 策略
+
+`rl/train.py` 在训练结束后，将模型保存为当前工作目录中的 `hand_reach_sac.zip`。
+在仓库根目录运行：
+
+```bash
+# 训练结束且模型已保存后，无窗口评估 20 个回合
+uv run HandReachDensev3/rl/eval.py --model hand_reach_sac.zip --episodes 20
+
+# 打开窗口，观察 5 个回合
+uv run HandReachDensev3/rl/eval.py --model hand_reach_sac.zip --episodes 5 --render
+```
+
+评估使用 `SAC.load()` 加载模型，将完整 `obs` 字典传入
+`model.predict(obs, deterministic=True)`，不再采样随机动作，也不更新网络。
+这与 [SB3 官方 SAC 回放示例](https://stable-baselines3.readthedocs.io/en/master/modules/sac.html#example)一致。
+默认使用 CPU 推理，可通过 `--device cuda` 修改。
+
+默认每回合种子为 `10000 + 回合索引`，与当前训练种子 42 分开；可用 `--seed` 指定一组固定评估目标以比较不同模型。
+输出包括累计回报的均值与标准差、最终 15 维目标误差范数，以及两种成功率：
+
+- **回合末成功率**：最后一步的 `info["is_success"]` 为真。
+- **回合中曾成功率**：至少一个执行动作后的状态成功，不要求保持到回合结束。
+
+即使中途成功也继续评估到 `terminated` 或 `truncated`，避免将短暂到达目标误认为持续成功。
